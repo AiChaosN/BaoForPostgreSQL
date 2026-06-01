@@ -45,9 +45,9 @@ if __name__ == "__main__":
         exit(0)
 
     if args.load:
-        import model
-        print("Attempting to load the Bao model...")
-        reg = model.BaoRegression(have_cache_data=True)
+        from model_factory import get_regressor_class
+        print("Attempting to load the model...")
+        reg = get_regressor_class()(have_cache_data=True)
         reg.load(args.load)
         
         print("Model loaded. Sending message to Bao server...")

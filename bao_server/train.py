@@ -3,13 +3,14 @@ import model
 import os
 import shutil
 import reg_blocker
+from model_factory import get_regressor_class
 
 class BaoTrainingException(Exception):
     pass
 
 def train_and_swap(fn, old, tmp, verbose=False):
     if os.path.exists(fn):
-        old_model = model.BaoRegression(have_cache_data=True)
+        old_model = get_regressor_class()(have_cache_data=True)
         old_model.load(fn)
     else:
         old_model = None
@@ -49,7 +50,7 @@ def train_and_save_model(fn, verbose=True, emphasize_experiments=0):
     if len(all_experience) < 20:
         print("Warning: trying to train a Bao model with fewer than 20 datapoints.")
 
-    reg = model.BaoRegression(have_cache_data=True, verbose=verbose)
+    reg = get_regressor_class()(have_cache_data=True, verbose=verbose)
     reg.fit(x, y)
     reg.save(fn)
     return reg
@@ -63,6 +64,6 @@ if __name__ == "__main__":
     train_and_save_model(sys.argv[1])
 
     print("Model saved, attempting load...")
-    reg = model.BaoRegression(have_cache_data=True)
+    reg = get_regressor_class()(have_cache_data=True)
     reg.load(sys.argv[1])
 

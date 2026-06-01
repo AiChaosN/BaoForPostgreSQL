@@ -12,6 +12,7 @@ import math
 import reg_blocker
 from constants import (PG_OPTIMIZER_INDEX, DEFAULT_MODEL_PATH,
                        OLD_MODEL_PATH, TMP_MODEL_PATH)
+from model_factory import get_regressor_class, MODEL_TYPE
 
 def add_buffer_info_to_plans(buffer_info, plans):
     for p in plans:
@@ -57,7 +58,7 @@ class BaoModel:
     
     def load_model(self, fp):
         try:
-            new_model = model.BaoRegression(have_cache_data=True)
+            new_model = get_regressor_class()(have_cache_data=True)
             new_model.load(fp)
 
             if reg_blocker.should_replace_model(
@@ -142,16 +143,23 @@ def start_server(listen_on, port):
 
 
 if __name__ == "__main__":
-    from multiprocessing import Process
+    from multiprocessing import Process, set_start_method
     from config import read_config
+
+    # Required for GNTO (CUDA) model loading -- a forked subprocess cannot
+    # re-initialize CUDA. LIMAO's bao_server already does this; vanilla BAO
+    # didn't need it because BAO's tree-CNN load goes through a different
+    # code path. Force spawn so both backends work.
+    set_start_method('spawn', force=True)
 
     config = read_config()
     port = int(config["Port"])
     listen_on = config["ListenOn"]
 
     print(f"Listening on {listen_on} port {port}")
-    
+    print(f"Using {MODEL_TYPE} Model")
+
     server = Process(target=start_server, args=[listen_on, port])
-    
+
     print("Spawning server process...")
     server.start()
